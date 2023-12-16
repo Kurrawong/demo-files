@@ -1,0 +1,45 @@
+trigger:
+- main
+
+name: Deploy Prez
+
+variables:
+  vmImageName: 'ubuntu-latest'
+
+  azureServiceConnection: 'Kurrawong'
+  resourceGroupName: 'GSWA'
+  location: 'australiaeast'
+  templateFile: 'deploy.json'
+  parameterFile: 'deploy.parameters.dev.json'
+
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    useGlobalConfig: false
+    inlineScript: |
+      echo $ACR_USERNAME
+      az group create --name $(resourceGroupName) --location $(location)
+      az deployment group create \
+        --name prez \
+        --resource-group $(resourceGroupName) \
+        --template-file $(templateFile) \
+        --parameters $(parameterFile) \
+        --parameters acr_username=$ACR_USERNAME \
+        --parameters acr_password=$ACR_PASSWORD
+      stgname=$(az deployment group show -g $(resourceGroupName) -n prez --query properties.outputs.stgname.value -o tsv)
+      fsname=$(az deployment group show -g $(resourceGroupName) -n prez --query properties.outputs.fsname.value -o tsv)
+      stgkey=$(az storage account keys list --resource-group $(resourceGroupName) --account-name $stgname --query [0].value -o tsv)
+      az storage file upload \
+        --account-name $stgname \
+        --share-name $fsname \
+        --account-key $stgkey \
+        --source ./config.ttl
+  env:
+    ACR_USERNAME: $(ACR_USERNAME)
+    ACR_PASSWORD: $(ACR_PASSWORD)

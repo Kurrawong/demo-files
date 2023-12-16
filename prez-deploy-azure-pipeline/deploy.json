@@ -1,0 +1,380 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "string"
+        },
+        "resourceTags": {
+        "type": "object",
+        "metadata": {
+            "description": "Tags to apply to the created resources"
+        }
+        },
+        "STGname": {
+            "type": "String",
+            "metadata": {
+                "description": "Storage Account Name"
+            }
+        },
+        "STGsku": {
+            "type": "string",
+            "metadata": {
+                "description": "sku for Storage Account."
+            }
+        },
+        "FSname": {
+            "type": "string",
+            "metadata": {
+                "description": "File Share Name"
+            }
+        },
+        "ASPname": {
+            "type": "string",
+            "metadata": {
+                "description": "App Service Plan Name"
+            }
+        },
+        "ASPsku": {
+            "type": "string",
+            "metadata": {
+                "description": "sku for App Service Plan"
+            }
+        },
+        "fusekiAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name for the Fuseki app service app"
+            }
+        },
+        "prezAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name for the prez app service app"
+            }
+        },
+        "fusekiDSname": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the dataset defined in fusekis config file."
+            }
+        },
+        "prezuiAppName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name for the prezui app service app"
+            }
+        },
+        "ACRname": {
+            "type": "string",
+            "metadata": {
+                "description": "name of Azure Container Registry housing the container images."
+            }
+        },
+        "CInamespace": {
+            "type": "string",
+            "metadata": {
+                "description": "Name space for container images. empty string if None"
+            }
+        },
+        "acr_username": {
+            "defaultValue": "",
+            "type": "securestring",
+            "metadata": {
+                "description": "admin username for the ACR (set via env var)"
+            }
+        },
+        "acr_password": {
+            "defaultValue": "",
+            "type": "securestring",
+            "metadata": {
+                "description": "admin password for the ACR (set via env var)"
+            }
+        },
+        "fusekiCIname": {
+            "type": "string",
+            "metadata": {
+                "description": "Image name for Fuseki."
+            }
+        },
+        "fusekiCItag": {
+            "type": "string",
+            "metadata": {
+                "description": "Image tag for Fuseki"
+            }
+        },
+        "prezCIname": {
+            "type": "string",
+            "metadata": {
+                "description": "Image name for Prez."
+            }
+        },
+        "prezCItag": {
+            "type": "string",
+            "metadata": {
+                "description": "Image tag for Prez"
+            }
+        },
+        "prezuiCIname": {
+            "type": "string",
+            "metadata": {
+                "description": "Image name for Prez-UI"
+            }
+        },
+        "prezuiCItag": {
+            "type": "string",
+            "metadata": {
+                "description": "Image tag for Prez-UI"
+            }
+        }
+    },
+    "variables": {
+        "fusekiversion": "[ concat('DOCKER|', parameters('ACRname'), '.azurecr.io/', parameters('CInamespace'), parameters('fusekiCIname'), ':', parameters('fusekiCItag')) ]",
+        "prezversion": "[ concat('DOCKER|', parameters('ACRname'), '.azurecr.io/', parameters('CInamespace'), parameters('prezCIname'), ':', parameters('prezCItag')) ]",
+        "prezuiversion": "[ concat('DOCKER|', parameters('ACRname'), '.azurecr.io/', parameters('CInamespace'), parameters('prezuiCIname'), ':', parameters('prezuiCItag')) ]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-01-01",
+            "name": "[ parameters('STGname') ]",
+            "location": "[ parameters('location') ]",
+            "tags": "[ parameters('resourceTags')]",
+            "sku": {
+                "name": "[ parameters('STGsku') ]",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "allowCrossTenantReplication": false,
+                "minimumTlsVersion": "TLS1_0",
+                "allowBlobPublicAccess": false,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2023-01-01",
+            "name": "[ concat(parameters('STGname'), '/default') ]",
+            "tags": "[ parameters('resourceTags')]",
+            "dependsOn": [
+                "[ resourceId('Microsoft.Storage/storageAccounts', parameters('STGname')) ]"
+            ],
+            "sku": {
+                "name": "[ parameters('STGsku') ]",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+            "apiVersion": "2023-01-01",
+            "name": "[ concat(parameters('STGname'), '/default/', parameters('FSname')) ]",
+            "tags": "[ parameters('resourceTags')]",
+            "dependsOn": [
+                "[ resourceId('Microsoft.Storage/storageAccounts/fileServices', parameters('STGname'), 'default') ]",
+                "[ resourceId('Microsoft.Storage/storageAccounts', parameters('STGname')) ]"
+            ],
+            "properties": {
+                "accessTier": "TransactionOptimized",
+                "shareQuota": 5120,
+                "enabledProtocols": "SMB"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[ parameters('ASPname') ]",
+            "location": "[ resourceGroup().location ]",
+            "tags": "[ parameters('resourceTags')]",
+            "kind": "linux",
+            "sku": {
+                "name": "[ parameters('ASPsku') ]"
+            },
+            "properties": {
+                "name": "[ parameters('ASPname') ]",
+                "reserved": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[ parameters('fusekiAppName') ]",
+            "location": "[ resourceGroup().location ]",
+            "tags": "[ parameters('resourceTags')]",
+            "kind": "app,linux,container",
+            "dependsOn": [
+                "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]"
+            ],
+            "properties": {
+                "name": "[ parameters('fusekiAppName') ]",
+                "serverFarmId": "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "linuxFxVersion": "[ variables('fusekiVersion') ]",
+                    "azureStorageAccounts": {
+                        "fusekivolume": {
+                            "type": "AzureFiles",
+                            "accountName": "[ parameters('STGname') ]",
+                            "shareName": "[ parameters('FSname') ]",
+                            "mountPath": "/fuseki",
+                            "accessKey": "[ listKeys(parameters('STGname'), '2023-01-01').keys[0].value]"
+                        }
+                    },
+                    "appSettings": [
+                        {
+                            "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                            "value": "false"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_URL",
+                            "value": "[ concat('https://', parameters('ACRname'), '.azurecr.io') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                            "value": "[ parameters('acr_username') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                            "value": "[ parameters('acr_password') ]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[ parameters('prezAppName') ]",
+            "location": "[ resourceGroup().location ]",
+            "tags": "[ parameters('resourceTags')]",
+            "kind": "app,linux,container",
+            "dependsOn": [
+                "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "[ resourceId('Microsoft.Web/sites',  parameters('fusekiAppName') )]"
+            ],
+            "properties": {
+                "name": "[ parameters('prezAppName') ]",
+                "serverFarmId": "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "linuxFxVersion": "[ variables('prezversion') ]",
+                    "appSettings": [
+                        {
+                            "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                            "value": "false"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_URL",
+                            "value": "[ concat('https://', parameters('ACRname'), '.azurecr.io') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                            "value": "[ parameters('acr_username') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                            "value": "[ parameters('acr_password') ]"
+                        },
+                        {
+                            "name": "SPARQL_ENDPOINT",
+                            "value": "[ concat('https://', reference(resourceId('Microsoft.Web/sites',  parameters('fusekiAppName'))).defaultHostName, '/', parameters('fusekiDSname')) ]"
+                        },
+                        {
+                            "name": "PORT",
+                            "value": "8000"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-09-01",
+            "name": "[ parameters('prezuiAppName') ]",
+            "location": "[ resourceGroup().location ]",
+            "tags": "[ parameters('resourceTags')]",
+            "kind": "app,linux,container",
+            "dependsOn": [
+                "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "[ resourceId('Microsoft.Web/sites',  parameters('fusekiAppName') )]"
+            ],
+            "properties": {
+                "name": "[ parameters('prezuiAppName') ]",
+                "serverFarmId": "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "linuxFxVersion": "[ variables('prezuiversion') ]",
+                    "appSettings": [
+                        {
+                            "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                            "value": "false"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_URL",
+                            "value": "[ concat('https://', parameters('ACRname'), '.azurecr.io') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+                            "value": "[ parameters('acr_username') ]"
+                        },
+                        {
+                            "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+                            "value": "[ parameters('acr_password') ]"
+                        },
+                        {
+                            "name": "VITE_API_BASE_URL",
+                            "value": "[ concat('https://', reference(resourceId('Microsoft.Web/sites',  parameters('prezAppName'))).defaultHostName) ]"
+                        },
+                        {
+                            "name": "WEBSITES_PORT",
+                            "value": "8000"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "stgname": {
+            "value": "[ parameters('STGName') ]",
+            "type": "string"
+        },
+        "fsname": {
+            "value": "[ parameters('FSname') ]",
+            "type": "string"
+        }
+    }
+}

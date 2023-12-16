@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "STGname": {
+            "value": "prezdemostorage"
+        },
+        "FSname": {
+            "value": "fusekivolume"
+        },
+        "STGsku": {
+            "value": "Standard_LRS"
+        },
+        "ASPname": {
+            "value": "prezdemoappserviceplan"
+        },
+        "ASPsku": {
+            "value": "B2"
+        },
+        "fusekiAppName": {
+            "value": "fusekidemo-9348190483904"
+        },
+        "prezAppName": {
+            "value": "prezdemo-9348190483904"
+        },
+        "prezuiAppName": {
+            "value": "prezuidemo-9348190483904"
+        },
+        "ACRname": {
+            "value": "gswareg"
+        },
+        "CInamespace": {
+            "value": "demo/"
+        },
+        "acr_username": {
+            "value": "override with env var"
+        },
+        "acr_password": {
+            "value": "override with env var"
+        },
+        "fusekiCIname": {
+            "value": "gswa-fuseki"
+        },
+        "fusekiCItag": {
+            "value": "latest"
+        },
+        "prezCIname": {
+            "value": "gswa-prez"
+        },
+        "prezCItag": {
+            "value": "latest"
+        },
+        "prezuiCIname": {
+            "value": "gswa-prez-ui"
+        },
+        "prezuiCItag": {
+            "value": "latest"
+        },
+        "fusekiDSname": {
+            "value": "myds"
+        },
+        "resourceTags": {
+            "value": {
+                "deployment": "prezdemo"
+            }
+        }
+    }
+}
