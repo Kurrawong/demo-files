@@ -3,65 +3,65 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "STGname": {
-            "value": "prezdemostorage"
+            "value": "" // Name for the Storage Account
         },
         "FSname": {
-            "value": "fusekivolume"
+            "value": "" // Name for the File share to mount to the fuseki container.
         },
         "STGsku": {
-            "value": "Standard_LRS"
+            "value": "Standard_LRS" // Storage Account SKU. recommended Standard_LRS
         },
         "ASPname": {
-            "value": "prezdemoappserviceplan"
+            "value": "" // Name for the App Service Plan
         },
         "ASPsku": {
-            "value": "B2"
+            "value": "F1" // B2 reccomended
         },
         "fusekiAppName": {
-            "value": "fusekidemo-9348190483904"
+            "value": "" // Name for the fuseki app service app eg. myFuseki
         },
         "prezAppName": {
-            "value": "prezdemo-9348190483904"
+            "value": "" // Name for the prez app service app eg. myPrez
         },
         "prezuiAppName": {
-            "value": "prezuidemo-9348190483904"
+            "value": "" // Name for the prez-ui app service app eg. myPrezui
         },
         "ACRname": {
-            "value": "gswareg"
+            "value": "" // Name of the Azure Container Registry to use, do not include 'azurecr.io'
         },
         "CInamespace": {
-            "value": "demo/"
+            "value": "" // Namespace for containers in the ACR. if None leave as empty string
         },
         "acr_username": {
-            "value": "override with env var"
+            "value": "override with env var" // Will be overriden with value from pipeline secret
         },
         "acr_password": {
-            "value": "override with env var"
+            "value": "override with env var" // Will be overriden with value from pipeline secret
         },
         "fusekiCIname": {
-            "value": "gswa-fuseki"
+            "value": "" // Name of the fuseki container image in ACR
         },
         "fusekiCItag": {
-            "value": "latest"
+            "value": "latest" // Image tag
         },
         "prezCIname": {
-            "value": "gswa-prez"
+            "value": "" // Name of the prez container image in ACR
         },
         "prezCItag": {
-            "value": "latest"
+            "value": "latest" // Image tag
         },
         "prezuiCIname": {
-            "value": "gswa-prez-ui"
+            "value": "" // Name of the prez ui container image in ACR
         },
         "prezuiCItag": {
-            "value": "latest"
+            "value": "latest" // Image tag
         },
         "fusekiDSname": {
-            "value": "myds"
+            "value": "myds" // Name of the fuseki dataset specified in the fuseki config file.
         },
         "resourceTags": {
             "value": {
-                "deployment": "prezdemo"
+                "deployment": "prezdemo" // a list of tag key value pairs to apply to each created resource.
             }
         }
     }
