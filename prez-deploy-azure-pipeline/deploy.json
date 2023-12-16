@@ -375,6 +375,10 @@
         "fsname": {
             "value": "[ parameters('FSname') ]",
             "type": "string"
+        },
+        "fusekiappname": {
+            "value": "[parameters('fusekiAppName')]",
+            "type": "string"
         }
     }
 }

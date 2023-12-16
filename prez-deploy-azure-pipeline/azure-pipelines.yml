@@ -33,12 +33,15 @@ steps:
         --parameters acr_password=$ACR_PASSWORD
       stgname=$(az deployment group show -g $(resourceGroupName) -n prez --query properties.outputs.stgname.value -o tsv)
       fsname=$(az deployment group show -g $(resourceGroupName) -n prez --query properties.outputs.fsname.value -o tsv)
+      fusekiappname=$(az deployment group show -g $(resourceGroupName) -n prez --query properties.outputs.fusekiappname.value -o tsv)
       stgkey=$(az storage account keys list --resource-group $(resourceGroupName) --account-name $stgname --query [0].value -o tsv)
       az storage file upload \
         --account-name $stgname \
         --share-name $fsname \
         --account-key $stgkey \
         --source ./config.ttl
+      az webapp restart --name $fusekiappname --resource-group $(resourceGroupName)
+
   env:
     ACR_USERNAME: $(ACR_USERNAME)
     ACR_PASSWORD: $(ACR_PASSWORD)
