@@ -6,9 +6,9 @@ name: Deploy Prez
 variables:
   vmImageName: 'ubuntu-latest'
 
-  azureServiceConnection: 'Kurrawong'
-  resourceGroupName: 'GSWA'
-  location: 'australiaeast'
+  azureServiceConnection: '<service connection name'
+  resourceGroupName: '<rg name>'
+  location: '<location>'
   templateFile: 'deploy.json'
   parameterFile: 'deploy.parameters.dev.json'
 
@@ -23,7 +23,6 @@ steps:
     scriptLocation: inlineScript
     useGlobalConfig: false
     inlineScript: |
-      echo $ACR_USERNAME
       az group create --name $(resourceGroupName) --location $(location)
       az deployment group create \
         --name prez \
