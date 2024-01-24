@@ -236,7 +236,8 @@
             "tags": "[ parameters('resourceTags')]",
             "kind": "app,linux,container",
             "dependsOn": [
-                "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]"
+                "[ resourceId('Microsoft.Web/serverfarms', parameters('ASPname')) ]",
+                "[ resourceId('Microsoft.Storage/storageAccounts/fileServices/shares', parameters('STGname'), 'default', parameters('FSname'))]"
             ],
             "properties": {
                 "name": "[ parameters('fusekiAppName') ]",
